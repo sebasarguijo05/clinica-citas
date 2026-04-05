@@ -1,8 +1,7 @@
  Sistema de Gestión de Citas Médicas
  
 Sistema web para la gestión de citas médicas orientado a clínicas pequeñas como consultorios generales y dentales.  
-Desarrollado con Laravel 11 y un diseño moderno basado en colores Navy + Orange.
-
+Desarrollado con Laravel 11. 
 
 
 Descripción General
