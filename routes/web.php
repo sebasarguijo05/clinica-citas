@@ -82,12 +82,16 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         ->name('calendar.events');
 });
 
-// Google Calendar OAuth
+// ─── Google Calendar OAuth ────────────────────────────────────────
 Route::middleware('auth')->group(function () {
     Route::get('auth/google', [\App\Http\Controllers\Auth\GoogleController::class, 'redirect'])
         ->name('google.auth');
     Route::get('auth/google/callback', [\App\Http\Controllers\Auth\GoogleController::class, 'callback'])
         ->name('google.callback');
+    Route::post('auth/google/disconnect', [\App\Http\Controllers\Auth\GoogleController::class, 'disconnect'])
+        ->name('google.disconnect');
 });
+
+
 
 require __DIR__.'/auth.php';

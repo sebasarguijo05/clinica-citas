@@ -31,6 +31,20 @@ class GoogleController extends Controller
             ? route('admin.dashboard')
             : route('dashboard');
 
-        return redirect($redirectTo)->with('success', '✅ Google Calendar conectado exitosamente.');
+        return redirect($redirectTo)->with('success', 'Google Calendar conectado exitosamente.');
+    }
+
+    public function disconnect()
+    {
+        auth()->user()->update([
+            'google_token'         => null,
+            'google_refresh_token' => null,
+        ]);
+
+        $redirectTo = auth()->user()->isAdmin()
+            ? route('admin.dashboard')
+            : route('dashboard');
+
+        return redirect($redirectTo)->with('success', 'Google Calendar desconectado correctamente.');
     }
 }
