@@ -25,34 +25,33 @@ class AppointmentController extends Controller
         return view('admin.appointments.show', compact('appointment', 'doctors'));
     }
 
- public function approve(Appointment $appointment)
+public function approve(Appointment $appointment)
 {
     $appointment->update(['status' => 'approved']);
-
-    $google = new \App\Services\GoogleCalendarService();
 
     $startDateTime = $appointment->date->format('Y-m-d') . 'T' . $appointment->time;
     $endDateTime   = $appointment->date->format('Y-m-d') . 'T' .
         \Carbon\Carbon::parse($appointment->time)->addMinutes(30)->format('H:i:s');
 
-    $eventData = [
-        'title'       => 'Cita médica — ' . $appointment->doctor->name,
-        'description' => 'Especialidad: ' . $appointment->doctor->specialty .
-                         '\nMotivo: ' . ($appointment->reason ?? 'No especificado'),
-        'start'       => $startDateTime,
-        'end'         => $endDateTime,
-    ];
-
-    //  Crear evento en calendario del PACIENTE
     $patient = $appointment->user;
+    $admin   = auth()->user();
+
+    // ✅ Evento para el PACIENTE — instancia propia del servicio
     if ($patient->google_token) {
-        $google->createEvent($patient, $eventData);
+        $googlePatient = new \App\Services\GoogleCalendarService();
+        $googlePatient->createEvent($patient, [
+            'title'       => 'Cita médica — ' . $appointment->doctor->name,
+            'description' => 'Especialidad: ' . $appointment->doctor->specialty .
+                             '\nMotivo: ' . ($appointment->reason ?? 'No especificado'),
+            'start'       => $startDateTime,
+            'end'         => $endDateTime,
+        ]);
     }
 
-    // Crear evento en calendario del ADMIN (con título diferente)
-    $admin = auth()->user();
+    // ✅ Evento para el ADMIN — instancia separada del servicio
     if ($admin->google_token) {
-        $adminEventId = $google->createEvent($admin, [
+        $googleAdmin = new \App\Services\GoogleCalendarService();
+        $adminEventId = $googleAdmin->createEvent($admin, [
             'title'       => 'Cita: ' . $patient->name . ' — ' . $appointment->doctor->name,
             'description' => 'Paciente: ' . $patient->email .
                              '\nMotivo: ' . ($appointment->reason ?? 'No especificado'),
