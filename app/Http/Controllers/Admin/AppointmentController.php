@@ -25,42 +25,43 @@ class AppointmentController extends Controller
         return view('admin.appointments.show', compact('appointment', 'doctors'));
     }
 
-   public function approve(Appointment $appointment)
+ public function approve(Appointment $appointment)
 {
     $appointment->update(['status' => 'approved']);
 
-    // Crear evento en Google Calendar si el admin tiene token
+    $google = new \App\Services\GoogleCalendarService();
+
+    $startDateTime = $appointment->date->format('Y-m-d') . 'T' . $appointment->time;
+    $endDateTime   = $appointment->date->format('Y-m-d') . 'T' .
+        \Carbon\Carbon::parse($appointment->time)->addMinutes(30)->format('H:i:s');
+
+    $eventData = [
+        'title'       => 'Cita médica — ' . $appointment->doctor->name,
+        'description' => 'Especialidad: ' . $appointment->doctor->specialty .
+                         '\nMotivo: ' . ($appointment->reason ?? 'No especificado'),
+        'start'       => $startDateTime,
+        'end'         => $endDateTime,
+    ];
+
+    //  Crear evento en calendario del PACIENTE
+    $patient = $appointment->user;
+    if ($patient->google_token) {
+        $google->createEvent($patient, $eventData);
+    }
+
+    // Crear evento en calendario del ADMIN (con título diferente)
     $admin = auth()->user();
-
     if ($admin->google_token) {
-        $google = new \App\Services\GoogleCalendarService();
-
-        $startDateTime = $appointment->date->format('Y-m-d') . 'T' . $appointment->time;
-        $endDateTime   = $appointment->date->format('Y-m-d') . 'T' .
-            \Carbon\Carbon::parse($appointment->time)->addMinutes(30)->format('H:i:s');
-
-        $eventId = $google->createEvent($admin, [
-            'title'       => 'Cita: ' . $appointment->user->name . ' con ' . $appointment->doctor->name,
-            'description' => 'Motivo: ' . ($appointment->reason ?? 'No especificado') .
-                             '\nPaciente: ' . $appointment->user->email,
+        $adminEventId = $google->createEvent($admin, [
+            'title'       => 'Cita: ' . $patient->name . ' — ' . $appointment->doctor->name,
+            'description' => 'Paciente: ' . $patient->email .
+                             '\nMotivo: ' . ($appointment->reason ?? 'No especificado'),
             'start'       => $startDateTime,
             'end'         => $endDateTime,
         ]);
 
-        if ($eventId) {
-            $appointment->update(['google_event_id' => $eventId]);
-        }
-
-        // También crear evento para el paciente si tiene token
-        $patient = $appointment->user;
-        if ($patient->google_token) {
-            $google->createEvent($patient, [
-                'title'       => 'Cita médica con ' . $appointment->doctor->name,
-                'description' => 'Especialidad: ' . $appointment->doctor->specialty .
-                                 '\nMotivo: ' . ($appointment->reason ?? 'No especificado'),
-                'start'       => $startDateTime,
-                'end'         => $endDateTime,
-            ]);
+        if ($adminEventId) {
+            $appointment->update(['google_event_id' => $adminEventId]);
         }
     }
 
