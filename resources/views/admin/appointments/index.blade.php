@@ -12,7 +12,7 @@
 
 {{-- Filtros --}}
 <div class="flex flex-wrap gap-2 mb-5">
-    @foreach(['all' => 'Todas', 'pending' => 'Pendientes', 'approved' => 'Aprobadas', 'rejected' => 'Rechazadas', 'cancelled' => 'Canceladas'] as $val => $label)
+    @foreach(['all' => 'Todas', 'pending' => 'Pendientes', 'approved' => 'Aprobadas', 'rejected' => 'Rechazadas'] as $val => $label)
         <a href="{{ request()->fullUrlWithQuery(['status' => $val]) }}"
            class="px-3 py-1.5 rounded-lg text-xs font-medium border transition
            {{ request('status', 'all') === $val
