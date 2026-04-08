@@ -136,10 +136,5 @@
 <script>
     const chatMessages = document.getElementById('chat-messages');
     if (chatMessages) chatMessages.scrollTop = chatMessages.scrollHeight;
-
-    setInterval(() => {
-    window.location.reload();
-}, 5000);
-
 </script>
 @endsection
