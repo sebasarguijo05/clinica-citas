@@ -27,4 +27,49 @@ class AppointmentMessage extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+
+public function isPending(): bool
+{
+    return $this->status === 'pending';
+}
+
+public function isApproved(): bool
+{
+    return $this->status === 'approved';
+}
+
+public function isRejected(): bool
+{
+    return $this->status === 'rejected';
+}
+
+public function isCancelled(): bool
+{
+    return $this->status === 'cancelled';
+}
+
+public function statusLabel(): string
+{
+    return match($this->status) {
+        'pending'   => 'Pendiente',
+        'approved'  => 'Aprobada',
+        'rejected'  => 'Rechazada',
+        'cancelled' => 'Cancelada',
+        default     => 'Desconocido',
+    };
+}
+
+public function statusColor(): string
+{
+    return match($this->status) {
+        'pending'   => 'yellow',
+        'approved'  => 'green',
+        'rejected'  => 'red',
+        'cancelled' => 'gray',
+        default     => 'gray',
+    };
+}
+
+
 }

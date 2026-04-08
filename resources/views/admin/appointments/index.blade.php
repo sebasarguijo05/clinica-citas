@@ -11,8 +11,8 @@
 </div>
 
 {{-- Filtros --}}
-<div class="flex gap-2 mb-5">
-    @foreach(['all' => 'Todas', 'pending' => 'Pendientes', 'approved' => 'Aprobadas', 'rejected' => 'Rechazadas'] as $val => $label)
+<div class="flex flex-wrap gap-2 mb-5">
+    @foreach(['all' => 'Todas', 'pending' => 'Pendientes', 'approved' => 'Aprobadas', 'rejected' => 'Rechazadas', 'cancelled' => 'Canceladas'] as $val => $label)
         <a href="{{ request()->fullUrlWithQuery(['status' => $val]) }}"
            class="px-3 py-1.5 rounded-lg text-xs font-medium border transition
            {{ request('status', 'all') === $val
@@ -37,7 +37,7 @@
         </thead>
         <tbody class="divide-y divide-slate-100">
             @forelse($appointments as $appointment)
-            <tr class="hover:bg-slate-50 transition">
+            <tr class="hover:bg-slate-50 transition {{ $appointment->isCancelled() ? 'opacity-60' : '' }}">
                 <td class="px-6 py-4">
                     <div class="flex items-center gap-3">
                         <div class="w-8 h-8 bg-slate-700 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
@@ -62,6 +62,11 @@
                         <span class="inline-flex items-center gap-1.5 bg-amber-50 text-amber-700 text-xs font-medium px-2.5 py-1 rounded-full">
                             <span class="w-1.5 h-1.5 bg-amber-400 rounded-full"></span>
                             Pendiente
+                        </span>
+                    @elseif($appointment->status === 'cancelled')
+                        <span class="inline-flex items-center gap-1.5 bg-slate-100 text-slate-500 text-xs font-medium px-2.5 py-1 rounded-full">
+                            <span class="w-1.5 h-1.5 bg-slate-400 rounded-full"></span>
+                            Cancelada
                         </span>
                     @else
                         <span class="inline-flex items-center gap-1.5 bg-red-50 text-red-700 text-xs font-medium px-2.5 py-1 rounded-full">

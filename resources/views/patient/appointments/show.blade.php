@@ -59,24 +59,38 @@
                 </div>
                 @endif
 
-                <div class="flex gap-3 mt-6">
-                    <a href="{{ route('patient.appointments.index') }}"
-                       class="bg-gray-200 text-gray-700 px-4 py-2 rounded hover:bg-gray-300 text-sm">
-                        ← Volver
-                    </a>
+               <div class="flex gap-3 mt-6">
+    <a href="{{ route('patient.appointments.index') }}"
+       class="inline-flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-lg text-sm transition border border-slate-200">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+        </svg>
+        Volver
+    </a>
 
-                    @if($appointment->isPending())
-                    <form method="POST" action="{{ route('patient.appointments.destroy', $appointment) }}"
-                          onsubmit="return confirm('¿Cancelar esta cita?')">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit"
-                            class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 text-sm">
-                            Cancelar Cita
-                        </button>
-                    </form>
-                    @endif
-                </div>
+    @if($appointment->isPending() || $appointment->isApproved())
+    <form method="POST" action="{{ route('patient.appointments.destroy', $appointment) }}"
+          onsubmit="return confirm('¿Cancelar esta cita? Esta accion no se puede deshacer.')">
+        @csrf @method('DELETE')
+        <button type="submit"
+            class="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm transition">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+            Cancelar Cita
+        </button>
+    </form>
+    @endif
+
+    @if($appointment->isCancelled())
+    <span class="inline-flex items-center gap-2 bg-slate-100 text-slate-500 px-4 py-2 rounded-lg text-sm border border-slate-200">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+        </svg>
+        Cita cancelada
+    </span>
+    @endif
+</div>
             </div>
         </div>
     </div>

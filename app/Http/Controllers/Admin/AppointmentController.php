@@ -10,13 +10,17 @@ use Illuminate\Http\Request;
 class AppointmentController extends Controller
 {
     public function index()
-    {
-        $appointments = Appointment::with(['user', 'doctor'])
-            ->orderBy('date', 'asc')
-            ->paginate(15);
+{
+    $query = Appointment::with(['user', 'doctor'])->orderBy('date', 'asc');
 
-        return view('admin.appointments.index', compact('appointments'));
+    if (request('status') && request('status') !== 'all') {
+        $query->where('status', request('status'));
     }
+
+    $appointments = $query->paginate(15);
+
+    return view('admin.appointments.index', compact('appointments'));
+}
 
     public function show(Appointment $appointment)
     {
@@ -105,4 +109,29 @@ public function approve(Appointment $appointment)
 
         return back()->with('success', 'Notas guardadas.');
     }
+
+public function cancel(Appointment $appointment)
+{
+    if ($appointment->google_event_id) {
+        if (auth()->user()->google_token) {
+            $googleAdmin = new \App\Services\GoogleCalendarService();
+            $googleAdmin->deleteEvent(auth()->user(), $appointment->google_event_id);
+        }
+        $patient = $appointment->user;
+        if ($patient->google_token) {
+            $googlePatient = new \App\Services\GoogleCalendarService();
+            $googlePatient->deleteEvent($patient, $appointment->google_event_id);
+        }
+    }
+
+    $appointment->update([
+        'status'          => 'cancelled',
+        'google_event_id' => null,
+    ]);
+
+    return back()->with('success', 'Cita cancelada. El historial queda guardado.');
+}
+
+
+
 }

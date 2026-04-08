@@ -48,6 +48,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         return view('admin.dashboard');
     })->name('dashboard');
 
+    Route::patch('appointments/{appointment}/cancel',
+    [AdminAppointmentController::class, 'cancel'])->name('appointments.cancel');
+
     // Doctores
     Route::resource('doctors', DoctorController::class);
 

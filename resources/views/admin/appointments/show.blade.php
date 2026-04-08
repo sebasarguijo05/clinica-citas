@@ -73,32 +73,45 @@
             </div>
             @endif
 
-            {{-- Botones aprobar/rechazar --}}
-            @if($appointment->isPending())
-            <div class="flex gap-3 mb-5">
-                <form method="POST" action="{{ route('admin.appointments.approve', $appointment) }}">
-                    @csrf @method('PATCH')
-                    <button type="submit"
-                        class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
-                        </svg>
-                        Aprobar Cita
-                    </button>
-                </form>
-                <form method="POST" action="{{ route('admin.appointments.reject', $appointment) }}">
-                    @csrf @method('PATCH')
-                    <button type="submit"
-                        class="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
-                        </svg>
-                        Rechazar Cita
-                    </button>
-                </form>
-            </div>
-            @endif
+         {{-- Botones de acción --}}
+<div class="flex flex-wrap gap-3 mb-5">
+    @if($appointment->isPending())
+    <form method="POST" action="{{ route('admin.appointments.approve', $appointment) }}">
+        @csrf @method('PATCH')
+        <button type="submit"
+            class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+            </svg>
+            Aprobar Cita
+        </button>
+    </form>
+    <form method="POST" action="{{ route('admin.appointments.reject', $appointment) }}">
+        @csrf @method('PATCH')
+        <button type="submit"
+            class="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+            Rechazar Cita
+        </button>
+    </form>
+    @endif
 
+    @if(!$appointment->isRejected())
+    <form method="POST" action="{{ route('admin.appointments.cancel', $appointment) }}"
+          onsubmit="return confirm('¿Cancelar esta cita? Se eliminará el evento de Google Calendar.')">
+        @csrf @method('PATCH')
+        <button type="submit"
+            class="inline-flex items-center gap-2 bg-slate-700 hover:bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+            </svg>
+            Cancelar Cita
+        </button>
+    </form>
+    @endif
+</div>
             {{-- Reprogramar --}}
             <div class="border-t border-slate-100 pt-5 mb-5">
                 <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-3">Reprogramar Cita</p>
