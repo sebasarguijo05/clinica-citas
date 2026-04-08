@@ -9,16 +9,14 @@ use Illuminate\Http\Request;
 
 class AppointmentController extends Controller
 {
-    public function index()
+   public function index()
 {
     $query = Appointment::with(['user', 'doctor'])->orderBy('date', 'asc');
 
     $status = request('status', 'all');
 
-    if ($status === 'cancelled') {
-        $query->where('is_cancelled', true);
-    } elseif ($status !== 'all') {
-        $query->where('status', $status)->where('is_cancelled', false);
+    if ($status !== 'all') {
+        $query->where('status', $status);
     }
 
     $appointments = $query->paginate(15);
@@ -43,20 +41,24 @@ public function approve(Appointment $appointment)
 
     $patient = $appointment->user;
     $admin   = auth()->user();
+    $updates = [];
 
-    // ✅ Evento para el PACIENTE — instancia propia del servicio
+    // Evento para el PACIENTE — guardar su event ID
     if ($patient->google_token) {
         $googlePatient = new \App\Services\GoogleCalendarService();
-        $googlePatient->createEvent($patient, [
+        $patientEventId = $googlePatient->createEvent($patient, [
             'title'       => 'Cita médica — ' . $appointment->doctor->name,
             'description' => 'Especialidad: ' . $appointment->doctor->specialty .
                              '\nMotivo: ' . ($appointment->reason ?? 'No especificado'),
             'start'       => $startDateTime,
             'end'         => $endDateTime,
         ]);
+        if ($patientEventId) {
+            $updates['google_patient_event_id'] = $patientEventId;
+        }
     }
 
-    // ✅ Evento para el ADMIN — instancia separada del servicio
+    // Evento para el ADMIN — guardar su event ID
     if ($admin->google_token) {
         $googleAdmin = new \App\Services\GoogleCalendarService();
         $adminEventId = $googleAdmin->createEvent($admin, [
@@ -66,14 +68,18 @@ public function approve(Appointment $appointment)
             'start'       => $startDateTime,
             'end'         => $endDateTime,
         ]);
-
         if ($adminEventId) {
-            $appointment->update(['google_event_id' => $adminEventId]);
+            $updates['google_event_id'] = $adminEventId;
         }
+    }
+
+    if (!empty($updates)) {
+        $appointment->update($updates);
     }
 
     return back()->with('success', 'Cita aprobada exitosamente.');
 }
+
 
    public function reject(Appointment $appointment)
 {
