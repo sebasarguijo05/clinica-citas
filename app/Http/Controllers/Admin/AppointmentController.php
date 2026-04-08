@@ -116,24 +116,26 @@ public function approve(Appointment $appointment)
 
 public function cancel(Appointment $appointment)
 {
-    if ($appointment->google_event_id) {
-        if (auth()->user()->google_token) {
-            $googleAdmin = new \App\Services\GoogleCalendarService();
-            $googleAdmin->deleteEvent(auth()->user(), $appointment->google_event_id);
-        }
-        $patient = $appointment->user;
-        if ($patient->google_token) {
-            $googlePatient = new \App\Services\GoogleCalendarService();
-            $googlePatient->deleteEvent($patient, $appointment->google_event_id);
-        }
+    // Borrar del calendario del ADMIN
+    if ($appointment->google_event_id && auth()->user()->google_token) {
+        $googleAdmin = new \App\Services\GoogleCalendarService();
+        $googleAdmin->deleteEvent(auth()->user(), $appointment->google_event_id);
     }
 
+    // Borrar del calendario del PACIENTE
+    $patient = $appointment->user;
+    if ($appointment->google_event_id && $patient->google_token) {
+        $googlePatient = new \App\Services\GoogleCalendarService();
+        $googlePatient->deleteEvent($patient, $appointment->google_event_id);
+    }
+
+    // Cambiar estado a rechazada en la plataforma
     $appointment->update([
-        'is_cancelled'    => true,
+        'status'          => 'rejected',
         'google_event_id' => null,
     ]);
 
-    return back()->with('success', 'Cita cancelada. El historial queda guardado.');
+    return back()->with('success', 'Cita cancelada correctamente.');
 }
 
 

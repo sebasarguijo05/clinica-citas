@@ -94,17 +94,17 @@ class AppointmentController extends Controller
         return view('patient.appointments.show', compact('appointment'));
     }
 
-
-    public function destroy(Appointment $appointment)
+public function destroy(Appointment $appointment)
 {
     if ($appointment->user_id !== auth()->id()) {
         abort(403);
     }
 
-    if ($appointment->isRejected() || $appointment->isCancelled()) {
+    if ($appointment->isRejected()) {
         return back()->with('error', 'Esta cita ya no puede ser cancelada.');
     }
 
+    // Borrar del calendario del ADMIN
     if ($appointment->google_event_id) {
         $admin = \App\Models\User::where('role', 'admin')
             ->whereNotNull('google_token')->first();
@@ -112,19 +112,22 @@ class AppointmentController extends Controller
             $googleAdmin = new \App\Services\GoogleCalendarService();
             $googleAdmin->deleteEvent($admin, $appointment->google_event_id);
         }
+
+        // Borrar del calendario del PACIENTE
         if (auth()->user()->google_token) {
             $googlePatient = new \App\Services\GoogleCalendarService();
             $googlePatient->deleteEvent(auth()->user(), $appointment->google_event_id);
         }
     }
 
+    // Cambiar estado a rechazada en la plataforma
     $appointment->update([
-        'is_cancelled'    => true,
+        'status'          => 'rejected',
         'google_event_id' => null,
     ]);
 
     return redirect()->route('patient.appointments.index')
-        ->with('success', 'Cita cancelada. El historial queda guardado.');
+        ->with('success', 'Cita cancelada exitosamente.');
 }
 
  
