@@ -112,23 +112,22 @@ public function destroy(Appointment $appointment)
             $googleAdmin = new \App\Services\GoogleCalendarService();
             $googleAdmin->deleteEvent($admin, $appointment->google_event_id);
         }
-
-        // Borrar del calendario del PACIENTE
-        if (auth()->user()->google_token) {
-            $googlePatient = new \App\Services\GoogleCalendarService();
-            $googlePatient->deleteEvent(auth()->user(), $appointment->google_event_id);
-        }
     }
 
-    // Cambiar estado a rechazada en la plataforma
+    // Borrar del calendario del PACIENTE usando su propio event ID
+    if ($appointment->google_patient_event_id && auth()->user()->google_token) {
+        $googlePatient = new \App\Services\GoogleCalendarService();
+        $googlePatient->deleteEvent(auth()->user(), $appointment->google_patient_event_id);
+    }
+
     $appointment->update([
-        'status'          => 'rejected',
-        'google_event_id' => null,
+        'status'                  => 'rejected',
+        'google_event_id'         => null,
+        'google_patient_event_id' => null,
     ]);
 
     return redirect()->route('patient.appointments.index')
         ->with('success', 'Cita cancelada exitosamente.');
-}
 
  
 }
