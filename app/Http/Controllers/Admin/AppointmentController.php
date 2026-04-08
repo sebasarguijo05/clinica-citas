@@ -13,8 +13,12 @@ class AppointmentController extends Controller
 {
     $query = Appointment::with(['user', 'doctor'])->orderBy('date', 'asc');
 
-    if (request('status') && request('status') !== 'all') {
-        $query->where('status', request('status'));
+    $status = request('status', 'all');
+
+    if ($status === 'cancelled') {
+        $query->where('is_cancelled', true);
+    } elseif ($status !== 'all') {
+        $query->where('status', $status)->where('is_cancelled', false);
     }
 
     $appointments = $query->paginate(15);
@@ -125,13 +129,12 @@ public function cancel(Appointment $appointment)
     }
 
     $appointment->update([
-        'status'          => 'cancelled',
+        'is_cancelled'    => true,
         'google_event_id' => null,
     ]);
 
     return back()->with('success', 'Cita cancelada. El historial queda guardado.');
 }
-
 
 
 }

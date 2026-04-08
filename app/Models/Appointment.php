@@ -9,70 +9,66 @@ class Appointment extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'user_id',
-        'doctor_id',
-        'date',
-        'time',
-        'status',
-        'reason',
-        'admin_notes',
-        'google_event_id',
-    ];
+   protected $fillable = [
+    'user_id',
+    'doctor_id',
+    'date',
+    'time',
+    'status',
+    'reason',
+    'admin_notes',
+    'google_event_id',
+    'is_cancelled',
+];
 
-    protected $casts = [
-        'date' => 'date',
-    ];
+protected $casts = [
+    'date'         => 'date',
+    'is_cancelled' => 'boolean',
+];
 
-    // Relación: la cita pertenece a un paciente
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
+public function isPending(): bool
+{
+    return $this->status === 'pending' && !$this->is_cancelled;
+}
 
-    // Relación: la cita pertenece a un doctor
-    public function doctor()
-    {
-        return $this->belongsTo(Doctor::class);
-    }
+public function isApproved(): bool
+{
+    return $this->status === 'approved' && !$this->is_cancelled;
+}
 
-    // Helpers de estado
-    public function isPending(): bool
-    {
-        return $this->status === 'pending';
-    }
+public function isRejected(): bool
+{
+    return $this->status === 'rejected' && !$this->is_cancelled;
+}
 
-    public function isApproved(): bool
-    {
-        return $this->status === 'approved';
-    }
+public function isCancelled(): bool
+{
+    return $this->is_cancelled === true;
+}
 
-    public function isRejected(): bool
-    {
-        return $this->status === 'rejected';
-    }
+public function statusLabel(): string
+{
+    if ($this->is_cancelled) return 'Cancelada';
 
-    // Etiqueta visual del estado
-    public function statusLabel(): string
-    {
-        return match($this->status) {
-            'pending'  => 'Pendiente',
-            'approved' => 'Aprobada',
-            'rejected' => 'Rechazada',
-            default    => 'Desconocido',
-        };
-    }
+    return match($this->status) {
+        'pending'  => 'Pendiente',
+        'approved' => 'Aprobada',
+        'rejected' => 'Rechazada',
+        default    => 'Desconocido',
+    };
+}
 
-    // Color del badge según estado
-    public function statusColor(): string
-    {
-        return match($this->status) {
-            'pending'  => 'yellow',
-            'approved' => 'green',
-            'rejected' => 'red',
-            default    => 'gray',
-        };
-    }
+public function statusColor(): string
+{
+    if ($this->is_cancelled) return 'gray';
+
+    return match($this->status) {
+        'pending'  => 'yellow',
+        'approved' => 'green',
+        'rejected' => 'red',
+        default    => 'gray',
+    };
+}
 
     // Relación: una cita tiene muchos mensajes
 public function messages()
