@@ -18,6 +18,7 @@ class Appointment extends Model
         'reason',
         'admin_notes',
         'google_event_id',
+        'google_patient_event_id',
     ];
 
     protected $casts = [
