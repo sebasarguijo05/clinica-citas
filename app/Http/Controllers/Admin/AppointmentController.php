@@ -67,13 +67,21 @@ public function approve(Appointment $appointment)
     return back()->with('success', 'Cita aprobada exitosamente.');
 }
 
-    public function reject(Appointment $appointment)
-    {
-        $appointment->update(['status' => 'rejected']);
-
-        return back()->with('success', 'Cita rechazada.');
+   public function reject(Appointment $appointment)
+{
+    // Eliminar evento de Google Calendar si existe
+    if ($appointment->google_event_id && auth()->user()->google_token) {
+        $google = new \App\Services\GoogleCalendarService();
+        $google->deleteEvent(auth()->user(), $appointment->google_event_id);
     }
 
+    $appointment->update([
+        'status'          => 'rejected',
+        'google_event_id' => null,
+    ]);
+
+    return back()->with('success', 'Cita rechazada.');
+}
     public function reschedule(Request $request, Appointment $appointment)
     {
         $validated = $request->validate([

@@ -95,18 +95,28 @@ class AppointmentController extends Controller
     }
 
     public function destroy(Appointment $appointment)
-    {
-        if ($appointment->user_id !== auth()->id()) {
-            abort(403);
-        }
-
-        if (!$appointment->isPending()) {
-            return back()->with('error', 'Solo puedes cancelar citas que estén pendientes.');
-        }
-
-        $appointment->delete();
-
-        return redirect()->route('patient.appointments.index')
-            ->with('success', 'Cita cancelada exitosamente.');
+{
+    if ($appointment->user_id !== auth()->id()) {
+        abort(403);
     }
+
+    if (!$appointment->isPending()) {
+        return back()->with('error', 'Solo puedes cancelar citas que estén pendientes.');
+    }
+
+    // Eliminar evento de Google Calendar si existe
+    if ($appointment->google_event_id) {
+        // Intentar borrar del calendario del admin
+        $admin = \App\Models\User::where('role', 'admin')->whereNotNull('google_token')->first();
+        if ($admin) {
+            $google = new \App\Services\GoogleCalendarService();
+            $google->deleteEvent($admin, $appointment->google_event_id);
+        }
+    }
+
+    $appointment->delete();
+
+    return redirect()->route('patient.appointments.index')
+        ->with('success', 'Cita cancelada exitosamente.');
+}
 }
