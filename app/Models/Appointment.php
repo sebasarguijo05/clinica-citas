@@ -9,83 +9,81 @@ class Appointment extends Model
 {
     use HasFactory;
 
-   protected $fillable = [
-    'user_id',
-    'doctor_id',
-    'date',
-    'time',
-    'status',
-    'reason',
-    'admin_notes',
-    'google_event_id',
-    'is_cancelled',
-];
+    protected $fillable = [
+        'user_id',
+        'doctor_id',
+        'date',
+        'time',
+        'status',
+        'reason',
+        'admin_notes',
+        'google_event_id',
+    ];
 
-protected $casts = [
-    'date'         => 'date',
-    'is_cancelled' => 'boolean',
-];
+    protected $casts = [
+        'date' => 'date',
+    ];
 
-public function isPending(): bool
-{
-    return $this->status === 'pending' && !$this->is_cancelled;
-}
+    public function isPending(): bool
+    {
+        return $this->status === 'pending';
+    }
 
-public function isApproved(): bool
-{
-    return $this->status === 'approved' && !$this->is_cancelled;
-}
+    public function isApproved(): bool
+    {
+        return $this->status === 'approved';
+    }
 
-public function isRejected(): bool
-{
-    return $this->status === 'rejected' && !$this->is_cancelled;
-}
+    public function isRejected(): bool
+    {
+        return $this->status === 'rejected';
+    }
 
-public function isCancelled(): bool
-{
-    return $this->is_cancelled === true;
-}
+    public function isCancelled(): bool
+    {
+        return false;
+    }
 
-public function statusLabel(): string
-{
-    if ($this->is_cancelled) return 'Cancelada';
+    public function statusLabel(): string
+    {
+        return match($this->status) {
+            'pending'  => 'Pendiente',
+            'approved' => 'Aprobada',
+            'rejected' => 'Rechazada',
+            default    => 'Desconocido',
+        };
+    }
 
-    return match($this->status) {
-        'pending'  => 'Pendiente',
-        'approved' => 'Aprobada',
-        'rejected' => 'Rechazada',
-        default    => 'Desconocido',
-    };
-}
+    public function statusColor(): string
+    {
+        return match($this->status) {
+            'pending'  => 'yellow',
+            'approved' => 'green',
+            'rejected' => 'red',
+            default    => 'gray',
+        };
+    }
 
-public function statusColor(): string
-{
-    if ($this->is_cancelled) return 'gray';
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 
-    return match($this->status) {
-        'pending'  => 'yellow',
-        'approved' => 'green',
-        'rejected' => 'red',
-        default    => 'gray',
-    };
-}
+    public function doctor()
+    {
+        return $this->belongsTo(Doctor::class);
+    }
 
-    // Relación: una cita tiene muchos mensajes
-public function messages()
-{
-    return $this->hasMany(AppointmentMessage::class)->orderBy('created_at', 'asc');
-}
+    public function messages()
+    {
+        return $this->hasMany(AppointmentMessage::class)->orderBy('created_at', 'asc');
+    }
 
-// Contar mensajes no leídos
-public function unreadMessagesCount(int $userId): int
-{
-    return $this->messages()
-        ->where('user_id', '!=', $userId)
-        ->where('is_read', false)
-        ->count();
-}
-
-
-
-
+    public function unreadMessagesCount(int $userId): int
+    {
+        return $this->messages()
+            ->where('user_id', '!=', $userId)
+            ->where('is_read', false)
+            ->count();
+    }
 }
